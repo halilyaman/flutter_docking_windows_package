@@ -126,7 +126,7 @@ class _WindowState extends State<Window> {
           GestureDetector(
             onLongPressMoveUpdate: _updateWindowLocation,
             onLongPressStart: _saveLocationBeforeMoving,
-            onLongPressEnd: _finishMovingWindow,
+            onLongPressEnd: _fixWindowLocation,
             onDoubleTap: widget.moveWindowToTop,
             child: Container(
               height: widget.windowBarHeight,
@@ -176,10 +176,10 @@ class _WindowState extends State<Window> {
     final newHeight = oldHeight + offset.dy;
     final newWidth = oldWidth + offset.dx;
 
-    if (newHeight > 0) {
+    if (newHeight > 0 && _bottomSafe(newHeight)) {
       height = newHeight;
     }
-    if (newWidth > 0) {
+    if (newWidth > 0 && _rightSafe(newWidth)) {
       width = newWidth;
     }
     inAction = true;
@@ -214,7 +214,7 @@ class _WindowState extends State<Window> {
     setState(() {});
   }
 
-  void _finishMovingWindow(LongPressEndDetails dragEndDetails) {
+  void _fixWindowLocation(LongPressEndDetails dragEndDetails) {
     // if windows is outside of the range, set it to the nearest available location
     final screenSize = MediaQuery.of(context).size;
     // check left side of the screen
@@ -222,7 +222,7 @@ class _WindowState extends State<Window> {
       posX = DockingWindowConstants.windowPositionPadding;
     }
     // check right side of the screen
-    if (posX + width > screenSize.width - DockingWindowConstants.windowPositionPadding) {
+    if (!_rightSafe(width)) {
       posX = screenSize.width - DockingWindowConstants.windowPositionPadding - width;
     }
     // check top of the screen
@@ -230,11 +230,21 @@ class _WindowState extends State<Window> {
       posY = DockingWindowConstants.windowPositionPadding;
     }
     // check bottom of the screen
-    if (posY + height > screenSize.height - DockingWindowConstants.windowPositionPadding) {
+    if (!_bottomSafe(height)) {
       posY = screenSize.height - DockingWindowConstants.extraPaddingForBottom
           - DockingWindowConstants.windowPositionPadding - height;
     }
     inAction = false;
     setState(() {});
+  }
+
+  bool _rightSafe(double width) {
+    final screenSize = MediaQuery.of(context).size;
+    return posX + width <= screenSize.width - DockingWindowConstants.windowPositionPadding;
+  }
+
+  bool _bottomSafe(double height) {
+    final screenSize = MediaQuery.of(context).size;
+    return posY + height <= screenSize.height - DockingWindowConstants.windowPositionPadding;
   }
 }
