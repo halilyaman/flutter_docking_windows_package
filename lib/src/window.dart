@@ -11,8 +11,8 @@ class Window extends StatefulWidget {
   final BoxDecoration windowDecoration;
   final BoxDecoration windowBarDecoration;
   final Widget windowBar;
-  Function moveWindowToTop;
   final bool enableResizing;
+  final Color windowBorderActionColor;
 
   Window({
     Key key,
@@ -26,7 +26,10 @@ class Window extends StatefulWidget {
     this.windowBarDecoration,
     this.windowBar,
     this.enableResizing = true,
+    this.windowBorderActionColor = DockingWindowConstants.defaultBorderActionColor,
   }) : assert(key != null), super(key: key);
+
+  Function moveWindowToTop;
 
   @override
   _WindowState createState() => _WindowState();
@@ -41,6 +44,7 @@ class _WindowState extends State<Window> {
   double height;
   double oldWidth;
   double oldHeight;
+  bool inAction = false;
 
   @override
   void initState() {
@@ -56,12 +60,12 @@ class _WindowState extends State<Window> {
   @override
   Widget build(BuildContext context) {
     // create default decoration for a window
-    final defaultBorderSide = BorderSide(
-        color: Colors.black,
-        width: DockingWindowConstants.defaultWindowBorderWidth
+    var defaultBorderSide = BorderSide(
+        color: DockingWindowConstants.defaultWindowBorderColor,
+        width: DockingWindowConstants.defaultWindowBorderWidth,
     );
 
-    BoxDecoration windowDecoration = BoxDecoration(
+    var windowDecoration = BoxDecoration(
       color: Colors.white,
       border: Border(
         left: defaultBorderSide,
@@ -76,7 +80,7 @@ class _WindowState extends State<Window> {
     }
 
     // create default decoration for a window tab
-    BoxDecoration windowTabDecoration = BoxDecoration(
+    var windowTabDecoration = BoxDecoration(
       color: DockingWindowConstants.defaultWindowBarColor,
       border: Border(
         left: defaultBorderSide,
@@ -89,6 +93,31 @@ class _WindowState extends State<Window> {
       windowTabDecoration = widget.windowBarDecoration;
     }
 
+    if (inAction) {
+      defaultBorderSide = BorderSide(
+        color: DockingWindowConstants.defaultBorderActionColor,
+        width: DockingWindowConstants.defaultWindowBorderWidth,
+      );
+
+      windowDecoration = BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          left: defaultBorderSide,
+          bottom: defaultBorderSide,
+          right: defaultBorderSide,
+        ),
+      );
+
+      windowTabDecoration = BoxDecoration(
+        color: DockingWindowConstants.defaultWindowBarColor,
+        border: Border(
+          left: defaultBorderSide,
+          top: defaultBorderSide,
+          right: defaultBorderSide,
+        ),
+      );
+    }
+
     return Positioned(
       top: posY,
       left: posX,
@@ -97,7 +126,7 @@ class _WindowState extends State<Window> {
           GestureDetector(
             onLongPressMoveUpdate: _updateWindowLocation,
             onLongPressStart: _saveLocationBeforeMoving,
-            onPanEnd: _onPanEnd,
+            onLongPressEnd: _finishMovingWindow,
             onDoubleTap: widget.moveWindowToTop,
             child: Container(
               height: widget.windowBarHeight,
@@ -118,6 +147,7 @@ class _WindowState extends State<Window> {
               if (widget.enableResizing)
                 GestureDetector(
                   onLongPressMoveUpdate: _resizeWindow,
+                  onLongPressEnd: _finishResizing,
                   onLongPressStart: _saveDimensionsBeforeMoving,
                   child: Icon(Icons.photo_size_select_small),
                 )
@@ -128,9 +158,17 @@ class _WindowState extends State<Window> {
     );
   }
 
+  void _finishResizing(_) {
+    setState(() {
+      inAction = false;
+    });
+  }
+
   void _saveDimensionsBeforeMoving(_) {
     oldWidth = width;
     oldHeight = height;
+    inAction = true;
+    setState(() {});
   }
 
   void _resizeWindow(LongPressMoveUpdateDetails updateDetails) {
@@ -144,12 +182,15 @@ class _WindowState extends State<Window> {
     if (newWidth > 0) {
       width = newWidth;
     }
+    inAction = true;
     setState(() {});
   }
 
   void _saveLocationBeforeMoving(_) {
     oldPosX = posX;
     oldPosY = posY;
+    inAction = true;
+    setState(() {});
   }
 
   void _updateWindowLocation(LongPressMoveUpdateDetails updateDetails) {
@@ -169,10 +210,11 @@ class _WindowState extends State<Window> {
         && newPosY + height < screenSize.height - DockingWindowConstants.extraPaddingForBottom) {
       posY = newPosY;
     }
+    inAction = true;
     setState(() {});
   }
 
-  void _onPanEnd(DragEndDetails dragEndDetails) {
+  void _finishMovingWindow(LongPressEndDetails dragEndDetails) {
     // if windows is outside of the range, set it to the nearest available location
     final screenSize = MediaQuery.of(context).size;
     // check left side of the screen
@@ -192,6 +234,7 @@ class _WindowState extends State<Window> {
       posY = screenSize.height - DockingWindowConstants.extraPaddingForBottom
           - DockingWindowConstants.windowPositionPadding - height;
     }
+    inAction = false;
     setState(() {});
   }
 }
