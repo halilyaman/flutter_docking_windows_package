@@ -2,10 +2,12 @@ part of docking_windows;
 
 class DockingWindows extends StatefulWidget {
   final List<Window> windows;
+  final bool disableDocking;
 
   const DockingWindows({
     Key key,
     this.windows = const [],
+    this.disableDocking = false,
   }) : super(key: key);
 
   @override
@@ -48,7 +50,9 @@ class _DockingWindowsState extends State<DockingWindows> {
           }
           window.pinnedWindows.remove(selectedWindow);
         });
-        _checkOverlapping(selectedWindow, globalPosition);
+        if (!widget.disableDocking) {
+          _checkOverlapping(selectedWindow, globalPosition);
+        }
       };
 
       window.setWindowLocation = (Window window) {
