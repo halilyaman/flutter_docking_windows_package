@@ -15,6 +15,13 @@ class DockingWindows extends StatefulWidget {
 }
 
 class _DockingWindowsState extends State<DockingWindows> {
+  List<Window> windows;
+
+  @override
+  void initState() {
+    windows = widget.windows;
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +29,7 @@ class _DockingWindowsState extends State<DockingWindows> {
 
     return SafeArea(
       child: Stack(
-        children: widget.windows.map((window) {
+        children: windows.map((window) {
           return WindowWidget(
             key: window.key,
             window: window,
@@ -33,18 +40,18 @@ class _DockingWindowsState extends State<DockingWindows> {
   }
 
   void _setCallbacks() {
-    widget.windows.forEach((window) {
+    windows.forEach((window) {
       // set double tap callback function for window tab
       window.moveWindowToTop = () {
         final selectedWindow = window;
-        widget.windows.remove(window);
-        widget.windows.insert(widget.windows.length, selectedWindow);
+        windows.remove(window);
+        windows.insert(windows.length, selectedWindow);
         setState(() {});
       };
 
       // used for getting location data while moving around
       window.changeWindowLocation = (Window selectedWindow, Offset globalPosition) {
-        widget.windows.forEach((window) {
+        windows.forEach((window) {
           if (window.key == selectedWindow.key) {
             return;
           }
@@ -68,7 +75,7 @@ class _DockingWindowsState extends State<DockingWindows> {
   }
 
   void _checkOverlapping(Window selectedWindow, Offset globalPosition) {
-    widget.windows.forEach((window) {
+    windows.forEach((window) {
       if (window.key == selectedWindow.key) {
         return;
       }
