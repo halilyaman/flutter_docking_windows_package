@@ -12,18 +12,20 @@ class Window extends StatefulWidget {
   final BoxDecoration windowBarDecoration;
   final Widget windowBar;
   Function moveWindowToTop;
+  final bool enableResizing;
 
   Window({
     Key key,
     this.height = DockingWindowConstants.initialWindowHeight,
     this.width = DockingWindowConstants.initialWindowWidth,
     this.windowBarHeight = DockingWindowConstants.initialWindowBarHeight,
-    this.initialPosX,
-    this.initialPosY,
+    this.initialPosX = DockingWindowConstants.initialPosX,
+    this.initialPosY = DockingWindowConstants.initialPosY,
     this.child,
     this.windowDecoration,
     this.windowBarDecoration,
     this.windowBar,
+    this.enableResizing = true,
   }) : assert(key != null), super(key: key);
 
   @override
@@ -31,21 +33,24 @@ class Window extends StatefulWidget {
 }
 
 class _WindowState extends State<Window> {
-  double posX = DockingWindowConstants.defaultStartPos.dx;
-  double posY = DockingWindowConstants.defaultStartPos.dy;
+  double posX;
+  double posY;
+  double width;
+  double height;
   Offset panStartLocalePos;
+
+  double oldWidth;
+  double oldHeight;
 
   @override
   void initState() {
-    // set initial value for posX if not null
-    if (widget.initialPosX != null) {
-      posX = widget.initialPosX;
-    }
-    // set initial value for posY if not null
-    if (widget.initialPosY != null) {
-      posY = widget.initialPosY;
-    }
     super.initState();
+
+    // initialize state variables
+    posX = widget.initialPosX;
+    posY = widget.initialPosY;
+    width = widget.width;
+    height = widget.height;
   }
 
   @override
@@ -96,20 +101,50 @@ class _WindowState extends State<Window> {
             onDoubleTap: widget.moveWindowToTop,
             child: Container(
               height: widget.windowBarHeight,
-              width: widget.width,
+              width: width,
               decoration: windowTabDecoration,
               child: widget.windowBar,
             ),
           ),
-          Container(
-            height: widget.height,
-            width: widget.width,
-            decoration: windowDecoration,
-            child: widget.child,
+          Stack(
+            alignment: Alignment.bottomRight,
+            children: [
+              Container(
+                height: height,
+                width: width,
+                decoration: windowDecoration,
+                child: widget.child,
+              ),
+              if (widget.enableResizing)
+                GestureDetector(
+                  onLongPressMoveUpdate: _resizeWindow,
+                  onLongPressStart: _saveDimensionsBeforeMove,
+                  child: Icon(Icons.photo_size_select_small),
+                )
+            ],
           ),
         ],
       ),
     );
+  }
+
+  void _saveDimensionsBeforeMove(_) {
+    oldWidth = width;
+    oldHeight = height;
+  }
+
+  void _resizeWindow(LongPressMoveUpdateDetails updateDetails) {
+    final offset = updateDetails.localOffsetFromOrigin;
+    final newHeight = oldHeight + offset.dy;
+    final newWidth = oldWidth + offset.dx;
+
+    if (newHeight > 0) {
+      height = newHeight;
+    }
+    if (newWidth > 0) {
+      width = newWidth;
+    }
+    setState(() {});
   }
 
   void _onPanStart(DragStartDetails dragStartDetails) {
@@ -124,17 +159,17 @@ class _WindowState extends State<Window> {
       posX = DockingWindowConstants.windowPositionPadding;
     }
     // check right side of the screen
-    if (posX + widget.width > screenSize.width - DockingWindowConstants.windowPositionPadding) {
-      posX = screenSize.width - DockingWindowConstants.windowPositionPadding - widget.width;
+    if (posX + width > screenSize.width - DockingWindowConstants.windowPositionPadding) {
+      posX = screenSize.width - DockingWindowConstants.windowPositionPadding - width;
     }
     // check top of the screen
     if (posY < DockingWindowConstants.windowPositionPadding) {
       posY = DockingWindowConstants.windowPositionPadding;
     }
     // check bottom of the screen
-    if (posY + widget.height > screenSize.height - DockingWindowConstants.windowPositionPadding) {
+    if (posY + height > screenSize.height - DockingWindowConstants.windowPositionPadding) {
       posY = screenSize.height - DockingWindowConstants.extraPaddingForBottom
-          - DockingWindowConstants.windowPositionPadding - widget.height;
+          - DockingWindowConstants.windowPositionPadding - height;
     }
     setState(() {});
   }
@@ -147,9 +182,9 @@ class _WindowState extends State<Window> {
 
     // calculate distances to screen sides
     final leftDist = globalPos.dx - panStartLocalePos.dx;
-    final rightDist = globalPos.dx + (widget.width - panStartLocalePos.dx);
+    final rightDist = globalPos.dx + (width - panStartLocalePos.dx);
     final topDist = globalPos.dy - panStartLocalePos.dy;
-    final bottomDist = globalPos.dy + (widget.height + widget.windowBarHeight - panStartLocalePos.dy);
+    final bottomDist = globalPos.dy + (height + widget.windowBarHeight - panStartLocalePos.dy);
 
     // update window position if it is in range of screen dimensions
     if (leftDist > DockingWindowConstants.windowPositionPadding

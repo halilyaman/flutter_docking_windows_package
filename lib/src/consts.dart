@@ -8,5 +8,6 @@ class DockingWindowConstants {
   static const initialWindowWidth = 100.0;
   static const initialWindowBarHeight = 20.0;
   static const defaultWindowBorderWidth = 2.0;
-  static const defaultStartPos = Offset(10.0, 10.0);
+  static const initialPosX = 10.0;
+  static const initialPosY = 10.0;
 }
