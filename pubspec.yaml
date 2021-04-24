@@ -1,8 +1,11 @@
 name: docking_windows
-description: A new Flutter package.
+description: >-
+  Do you need Windows which can be relocated almost anywhere and resized dynamically at runtime ?
+  This package may help you. Windows can be docked to each other by drag and drop.
+  You can change every aspect of the UI. It is highly customizable.
 version: 0.0.1
-author:
-homepage:
+author: Halil Yaman
+homepage: https://github.com/halilyaman/flutter_docking_windows_package
 
 environment:
   sdk: ">=2.7.0 <3.0.0"
