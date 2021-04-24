@@ -119,17 +119,21 @@ class _WindowState extends State<Window> {
   void _onPanEnd(DragEndDetails dragEndDetails) {
     // if windows is outside of the range, set it to the nearest available location
     final screenSize = MediaQuery.of(context).size;
+    // check left side of the screen
     if (posX <= 0) {
       posX = DockingWindowConstants.windowPositionPadding;
     }
+    // check right side of the screen
     if (posX + widget.width > screenSize.width - DockingWindowConstants.windowPositionPadding) {
       posX = screenSize.width - DockingWindowConstants.windowPositionPadding - widget.width;
     }
-    if (posY < DockingWindowConstants.extraPaddingForTopAndBottom + DockingWindowConstants.windowPositionPadding) {
-      posY = DockingWindowConstants.extraPaddingForTopAndBottom + DockingWindowConstants.windowPositionPadding;
+    // check top of the screen
+    if (posY < DockingWindowConstants.windowPositionPadding) {
+      posY = DockingWindowConstants.windowPositionPadding;
     }
+    // check bottom of the screen
     if (posY + widget.height > screenSize.height - DockingWindowConstants.windowPositionPadding) {
-      posY = screenSize.height - DockingWindowConstants.extraPaddingForTopAndBottom
+      posY = screenSize.height - DockingWindowConstants.extraPaddingForBottom
           - DockingWindowConstants.windowPositionPadding - widget.height;
     }
     setState(() {});
@@ -152,7 +156,7 @@ class _WindowState extends State<Window> {
         && rightDist < (screenSize.width - DockingWindowConstants.windowPositionPadding)) {
       posX += dx;
     }
-    if (topDist > (DockingWindowConstants.extraPaddingForTopAndBottom + DockingWindowConstants.windowPositionPadding)
+    if (topDist > DockingWindowConstants.windowPositionPadding 
         && bottomDist < (screenSize.height - DockingWindowConstants.windowPositionPadding)) {
       posY += dy;
     }
