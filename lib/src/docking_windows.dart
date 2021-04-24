@@ -13,13 +13,6 @@ class DockingWindows extends StatefulWidget {
 }
 
 class _DockingWindowsState extends State<DockingWindows> {
-
-  @override
-  void initState() {
-    super.initState();
-
-  }
-
   @override
   Widget build(BuildContext context) {
     _setWindowCallbacks();

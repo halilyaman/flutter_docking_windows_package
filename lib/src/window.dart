@@ -125,7 +125,7 @@ class _WindowState extends State<Window> {
         children: [
           GestureDetector(
             onLongPressMoveUpdate: _updateWindowLocation,
-            onLongPressStart: _saveLocationBeforeMoving,
+            onLongPressStart: _startWindowRelocation,
             onLongPressEnd: _fixWindowLocation,
             onDoubleTap: widget.moveWindowToTop,
             child: Container(
@@ -186,10 +186,11 @@ class _WindowState extends State<Window> {
     setState(() {});
   }
 
-  void _saveLocationBeforeMoving(_) {
+  void _startWindowRelocation(_) {
     oldPosX = posX;
     oldPosY = posY;
     inAction = true;
+    widget.moveWindowToTop();
     setState(() {});
   }
 
