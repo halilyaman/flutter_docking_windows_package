@@ -35,10 +35,10 @@ class Window extends StatefulWidget {
 class _WindowState extends State<Window> {
   double posX;
   double posY;
+  double oldPosX;
+  double oldPosY;
   double width;
   double height;
-  Offset panStartLocalePos;
-
   double oldWidth;
   double oldHeight;
 
@@ -95,8 +95,8 @@ class _WindowState extends State<Window> {
       child: Column(
         children: [
           GestureDetector(
-            onPanUpdate: _updateWindowLocation,
-            onPanStart: _onPanStart,
+            onLongPressMoveUpdate: _updateWindowLocation,
+            onLongPressStart: _saveLocationBeforeMoving,
             onPanEnd: _onPanEnd,
             onDoubleTap: widget.moveWindowToTop,
             child: Container(
@@ -118,7 +118,7 @@ class _WindowState extends State<Window> {
               if (widget.enableResizing)
                 GestureDetector(
                   onLongPressMoveUpdate: _resizeWindow,
-                  onLongPressStart: _saveDimensionsBeforeMove,
+                  onLongPressStart: _saveDimensionsBeforeMoving,
                   child: Icon(Icons.photo_size_select_small),
                 )
             ],
@@ -128,7 +128,7 @@ class _WindowState extends State<Window> {
     );
   }
 
-  void _saveDimensionsBeforeMove(_) {
+  void _saveDimensionsBeforeMoving(_) {
     oldWidth = width;
     oldHeight = height;
   }
@@ -147,8 +147,29 @@ class _WindowState extends State<Window> {
     setState(() {});
   }
 
-  void _onPanStart(DragStartDetails dragStartDetails) {
-    panStartLocalePos = dragStartDetails.localPosition;
+  void _saveLocationBeforeMoving(_) {
+    oldPosX = posX;
+    oldPosY = posY;
+  }
+
+  void _updateWindowLocation(LongPressMoveUpdateDetails updateDetails) {
+    final screenSize = MediaQuery.of(context).size;
+    final offset = updateDetails.localOffsetFromOrigin;
+
+    // calculate new positions
+    final newPosX = oldPosX + offset.dx;
+    final newPosY = oldPosY + offset.dy;
+
+    // check screen boundaries
+    if (newPosX > DockingWindowConstants.windowPositionPadding
+        && newPosX + width < screenSize.width - DockingWindowConstants.windowPositionPadding) {
+      posX = newPosX;
+    }
+    if (newPosY > DockingWindowConstants.windowPositionPadding
+        && newPosY + height < screenSize.height - DockingWindowConstants.extraPaddingForBottom) {
+      posY = newPosY;
+    }
+    setState(() {});
   }
 
   void _onPanEnd(DragEndDetails dragEndDetails) {
@@ -170,30 +191,6 @@ class _WindowState extends State<Window> {
     if (posY + height > screenSize.height - DockingWindowConstants.windowPositionPadding) {
       posY = screenSize.height - DockingWindowConstants.extraPaddingForBottom
           - DockingWindowConstants.windowPositionPadding - height;
-    }
-    setState(() {});
-  }
-
-  void _updateWindowLocation(DragUpdateDetails dragUpdateDetails) {
-    final screenSize = MediaQuery.of(context).size;
-    final dx = dragUpdateDetails.delta.dx;
-    final dy = dragUpdateDetails.delta.dy;
-    final globalPos = dragUpdateDetails.globalPosition;
-
-    // calculate distances to screen sides
-    final leftDist = globalPos.dx - panStartLocalePos.dx;
-    final rightDist = globalPos.dx + (width - panStartLocalePos.dx);
-    final topDist = globalPos.dy - panStartLocalePos.dy;
-    final bottomDist = globalPos.dy + (height + widget.windowBarHeight - panStartLocalePos.dy);
-
-    // update window position if it is in range of screen dimensions
-    if (leftDist > DockingWindowConstants.windowPositionPadding
-        && rightDist < (screenSize.width - DockingWindowConstants.windowPositionPadding)) {
-      posX += dx;
-    }
-    if (topDist > DockingWindowConstants.windowPositionPadding 
-        && bottomDist < (screenSize.height - DockingWindowConstants.windowPositionPadding)) {
-      posY += dy;
     }
     setState(() {});
   }
