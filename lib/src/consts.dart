@@ -1,7 +1,7 @@
 part of docking_windows;
 
 class DockingWindowConstants {
-  static const Color defaultWindowBarColor = Colors.green;
+  static const Color defaultWindowBarColor = Colors.lightGreenAccent;
   static const Color defaultBorderActionColor = Colors.red;
   static const Color defaultWindowBorderColor = Colors.black;
   static const windowPositionPadding = 5.0;
